@@ -1,6 +1,5 @@
 # Portfolio-Projects
 This repository will include all of my portfolio projects.
-Below there will be descriptions for each project I have worked on.
 
 # Star-Wars-Text-Analysis
 I used R Studio to analyse the script of Star Wars Episode IV. I used different packages such as tidyverse and ggplot2.
