@@ -56,7 +56,7 @@ JOIN (
     FROM energy_consumption )
    subquery ON ec.EnergyConsumption = subquery.Min_Energy;
 
--- Filtering Temperate within the range of 20-25
+-- Filtering Temperature within the range of 20-25
 SELECT * FROM energy_consumption 
 WHERE Temperature BETWEEN 20 AND 25
 ORDER BY Temperature DESC;
