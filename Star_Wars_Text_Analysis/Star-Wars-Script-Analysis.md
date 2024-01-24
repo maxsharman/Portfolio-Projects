@@ -458,4 +458,4 @@ scale_fill_brewer(palette = "Blues")
 print(Characters)
 ```
 
-![](Star-Wars-Script-Analysis_files/figure-gfm/Script Appearances.png)<!-- -->
+![](Star-Wars-Script-Analysis_files/figure-gfm/Script_Appearances.png)<!-- -->
