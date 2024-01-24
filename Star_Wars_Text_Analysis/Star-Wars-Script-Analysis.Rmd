@@ -1,0 +1,146 @@
+## Star-Wars-EP4-Script-Text-Analysis
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading Packages
+
+```{r}
+library(rmarkdown)
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(stringr)
+library(knitr)
+library(ggplot2)
+```
+
+Reading Star Wars Episode 4 Script into R
+
+```{r}
+text <- read.delim('SW_EpisodeIV.txt') 
+```
+
+Exploring the Text File
+
+```{r}
+head(text) 
+str(text) 
+tail(text) 
+summary(text)
+```
+
+Tokenize the text also removing stop words and numbers
+
+```{r}
+Tokenized_script <- text %>%
+  mutate(text = as.character(text)) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(get_stopwords()) %>% 
+  filter(!str_detect(word, "\\d+")) 
+```
+
+Counting word occurrences
+
+```{r}
+word_frequency <- Tokenized_script %>% 
+  count(word, sort = TRUE)
+```
+
+Sorting for the top 9 most occuring words
+
+```{r}
+top_9_words <- word_frequency %>% head(9)
+```
+
+Visual Bar chart for the top 9 most occurring words
+
+```{r}
+Word_occurrences <- ggplot(top_9_words, aes(word, n, fill = word)) +
+  geom_bar(stat = 'identity', color = "Black") +
+  ggtitle('Top 9 Most Frequent Words') +
+  xlab("word") +
+  ylab("Frequency") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Blues")
+  
+print(Word_occurrences)
+```
+
+Script Sentiment counts. Positive and Negative
+
+```{r}
+Sentiment_count <-Tokenized_script %>% 
+  inner_join(get_sentiments(), by = "word") %>% 
+  count(sentiment)
+
+kable(Sentiment_count)
+```
+
+Visual Bar Chart For the Sentiment Analysis
+
+```{r}
+Sentiments <- ggplot(Sentiment_count, aes(sentiment, n, fill = sentiment)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = n), vjust = -0.3, color = "Black") +
+  ggtitle("Star Wars Ep4 Sentiment Analysis") +
+  xlab("Sentiments") +
+  ylab("Counts") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Blues")
+
+print(Sentiments)
+```
+
+Extracting all the characters from the script. Here, I replace commas in the text to avoid having names separated.
+
+```{r}
+Characters <- text %>% 
+  mutate(character.names = str_extract_all(character.dialogue, "\\b[A-Z][A-Z]+\\b")) %>% 
+  filter(lengths(character.names) > 0) %>% 
+  mutate(character.names = str_replace_all(character.names, ",", ""))
+
+```
+
+Exploring Character Names.
+
+```{r}
+unique(Characters['character.names'])
+```
+
+Counting Character Occurrences.
+
+```{r}
+character_counts <- table(unlist(Characters$character.names))
+
+character_counts <- sort(character_counts, decreasing = TRUE)
+
+print(character_counts)
+```
+
+Creating data frame for character_counts.
+
+```{r}
+character_counts_df <- as.data.frame(character_counts)
+```
+
+Sorting for Top 5 Character Script Appearances.
+
+```{r}
+top_characters <- character_counts_df %>% head(5)
+
+kable(top_characters)
+```
+
+Visual Bar Chart For Character Script Appearances.
+
+```{r}
+Characters <- ggplot(top_characters, aes(Var1, Freq, fill = Var1)) +
+geom_bar(stat = 'identity', color = "Black") + ggtitle('Star Wars Ep 4
+Top 5 Character Script Appearances') + xlab("Characters") +
+ylab("Appearances") + labs(fill = "Characters") + theme_minimal() +
+scale_fill_brewer(palette = "Blues")
+
+print(Characters)
+```
