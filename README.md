@@ -7,3 +7,4 @@ The data set I used for this analysis: SW_EpisodeIV.txt - Script from Star Wars 
 
 # Energy-Consumption
 Data exploration on energy_consumption.csv with a dashboard created in tableau.
+Data set found on kaggle: https://www.kaggle.com/datasets/mrsimple07/energy-consumption-prediction
