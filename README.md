@@ -6,4 +6,4 @@ I used R Studio to analyse the script of Star Wars Episode IV. I used different 
 The data set I used for this analysis: SW_EpisodeIV.txt - Script from Star Wars Episode IV.
 
 # SQL
-Simple SQL Queries on Energy_consumption.csv
+Data exploration on energy_consumption.csv with a dashboard created in tableau.
