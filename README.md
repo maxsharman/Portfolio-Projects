@@ -5,5 +5,5 @@ This repository will include all of my portfolio projects.
 I used R Studio to analyse the script of Star Wars Episode IV. I used different packages such as tidyverse and ggplot2.
 The data set I used for this analysis: SW_EpisodeIV.txt - Script from Star Wars Episode IV.
 
-# SQL
+# Energy-Consumption
 Data exploration on energy_consumption.csv with a dashboard created in tableau.
