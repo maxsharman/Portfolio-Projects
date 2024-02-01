@@ -8,5 +8,5 @@ The data set I used for this analysis: SW_EpisodeIV.txt - Script from Star Wars 
 # Energy-Consumption
 Data exploration in SQL.  
 DashBoard created in Tableau.  
-Time Series Analysis in Python.
+Time Series Analysis in Python.  
 Data set found on kaggle: https://www.kaggle.com/datasets/mrsimple07/energy-consumption-prediction
