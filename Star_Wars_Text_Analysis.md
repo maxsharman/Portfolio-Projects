@@ -101,28 +101,28 @@ str(script)
 
 ``` r
 Characters <- script %>% 
-  mutate(character.names = str_extract_all(character.dialogue, "\\b[A-Z][A-Z]+\\b")) %>% 
+  mutate(character.names = str_extract_all(character.dialogue, "\b[A-Z][A-Z]+\b")) %>% 
   filter(lengths(character.names) > 0) %>% 
   mutate(character.names = str_replace_all(character.names, ",", ""))
 ```
 
-    ## Warning: There was 1 warning in `mutate()`.
-    ## ℹ In argument: `character.names = str_replace_all(character.names, ",", "")`.
-    ## Caused by warning in `stri_replace_all_regex()`:
+    ## Warning: There was 1 warning in `mutate()`.  
+    ## ℹ In argument: `character.names = str_replace_all(character.names, ",", "")`.  
+    ## Caused by warning in `stri_replace_all_regex()`:  
     ## ! argument is not an atomic vector; coercing
 
 #### Finding Top 5 Character Name Occurances and thier Frequency Counts
 
 ``` r
-character_dialogue_counts <- table(unlist(Characters$character.names))
+character_dialogue_counts <- table(unlist(Characters$character.names));
 
-character_dialogue_counts <- sort(character_dialogue_counts, decreasing = TRUE)
+character_dialogue_counts <- sort(character_dialogue_counts, decreasing = TRUE);
 
-character_counts_df <- as.data.frame(character_dialogue_counts)
+character_counts_df <- as.data.frame(character_dialogue_counts);
 
-top_characters <- character_counts_df %>% head(5)
+top_characters <- character_counts_df %>% head(5);
 
-kable(top_characters)
+kable(top_characters);
 ```
 
 | Var1     | Freq |
@@ -132,7 +132,7 @@ kable(top_characters)
 | THREEPIO |  118 |
 | BEN      |   82 |
 | LEIA     |   57 |
-
+|
 #### Plotting the Top 5 Occuring Characters And their Dialogue Frequency
 
 ``` r
@@ -140,9 +140,9 @@ Characters <- ggplot(top_characters, aes(Var1, Freq, fill = Var1)) +
 geom_bar(stat = 'identity', color = "Black") + ggtitle('Star Wars Ep 4
 Top 5 Character Dialogue Frequency') + xlab("Characters") +
 ylab("Frequency") + labs(fill = "Characters") + theme_minimal() +
-scale_fill_brewer(palette = "Blues")
+scale_fill_brewer(palette = "Blues");
 
-print(Characters)
+print(Characters);
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
@@ -150,14 +150,14 @@ print(Characters)
 ``` r
 character_names <- c(
   "luke", "han", "threepio", "ben", "leia", "vader", "red leader", "biggs", "tarkin", "owen",
-  "trooper", "gold leader", "wedge", "officer", "red ten")
+  "trooper", "gold leader", "wedge", "officer", "red ten");
 
 Tokenized_script <- script %>%
   mutate(text = as.character(character.dialogue)) %>%
   unnest_tokens(word, text) %>% 
   anti_join(get_stopwords()) %>% 
   filter(!str_detect(word, "\\d+")) %>% 
-  filter(!word %in% character_names)
+  filter(!word %in% character_names);
 ```
 
     ## Joining with `by = join_by(word)`
@@ -165,18 +165,18 @@ Tokenized_script <- script %>%
 #### Counting word occurrences
 
 ``` r
-Tokenized_script <- Tokenized_script %>% mutate(lemmatized_text = lemmatize_words(word))
-Tokenized_script <- drop(Tokenized_script['lemmatized_text'])
+Tokenized_script <- Tokenized_script %>% mutate(lemmatized_text = lemmatize_words(word));
+Tokenized_script <- drop(Tokenized_script['lemmatized_text']);
 
 word_frequency <- Tokenized_script %>% 
-  count(lemmatized_text, sort = TRUE)
+  count(lemmatized_text, sort = TRUE);
 ```
 
 #### Sorting for the top 10 most frequent words
 
 ``` r
-top_10_words <- word_frequency %>% head(10)
-top_10_words <- top_10_words %>% rename(Frequency = n)
+top_10_words <- word_frequency %>% head(10);
+top_10_words <- top_10_words %>% rename(Frequency = n);
 ```
 
 #### Visual Bar chart for the top 10 most frequent words
@@ -188,16 +188,16 @@ Word_occurrences <- ggplot(top_10_words, aes(lemmatized_text, Frequency, fill = 
   xlab("word") +
   ylab("Frequency") +
   theme_minimal() +
-  scale_fill_gradient(low = "lightblue", high = "darkblue")
+  scale_fill_gradient(low = "lightblue", high = "darkblue");
   
-print(Word_occurrences)
+print(Word_occurrences);
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 wordcloud(words = word_frequency$lemmatized_text, freq = word_frequency$n, min.freq = 10,
-          random.order = FALSE, colors = brewer.pal(8, "BrBG"))
+          random.order = FALSE, colors = brewer.pal(8, "BrBG"));
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
@@ -207,9 +207,9 @@ wordcloud(words = word_frequency$lemmatized_text, freq = word_frequency$n, min.f
 ``` r
 Sentiment_count <- Tokenized_script %>% 
   inner_join(get_sentiments(), c("lemmatized_text" = "word")) %>% 
-  count(sentiment)
+  count(sentiment);
 
-kable(Sentiment_count)
+kable(Sentiment_count);
 ```
 
 | sentiment |   n |
@@ -227,9 +227,9 @@ Sentiment_count <- ggplot(Sentiment_count, aes(sentiment, n, fill = sentiment)) 
   xlab("Sentiments") +
   ylab("Counts") +
   theme_minimal() +
-  scale_fill_brewer(palette = "Blues")
+  scale_fill_brewer(palette = "Blues");
 
-print(Sentiment_count)
+print(Sentiment_count);
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
@@ -238,86 +238,86 @@ print(Sentiment_count)
 
 ``` r
 Luke_lines <- script %>% 
-  filter(grepl("LUKE", character.dialogue))
+  filter(grepl("LUKE", character.dialogue));
 
 Vader_lines <- script %>% 
-  filter(grepl("VADER", character.dialogue))
+  filter(grepl("VADER", character.dialogue));
 
 
 Threepio_lines <- script %>% 
-  filter(grepl("THREEPIO", character.dialogue))
+  filter(grepl("THREEPIO", character.dialogue));
 ```
 
 #### LUKE
 
 ``` r
-Tokenized_Luke_lines <- Luke_lines %>%
-  mutate(text = as.character(character.dialogue)) %>%
+Tokenized_Luke_lines <- Luke_lines %>% 
+  mutate(text = as.character(character.dialogue)) %>% 
   unnest_tokens(word, text) %>% 
   anti_join(get_stopwords()) %>% 
   filter(!str_detect(word, "\\d+")) %>% 
-  filter(!word %in% character_names)
+  filter(!word %in% character_names);
 ```
 
     ## Joining with `by = join_by(word)`
 
 ``` r
-Tokenized_Luke_lines <- Tokenized_Luke_lines %>% mutate(lemmatized_text = lemmatize_words(word))
-Tokenized_Luke_lines <- drop(Tokenized_Luke_lines['lemmatized_text'])
+Tokenized_Luke_lines <- Tokenized_Luke_lines %>% mutate(lemmatized_text = lemmatize_words(word));
+Tokenized_Luke_lines <- drop(Tokenized_Luke_lines['lemmatized_text']);
 
 word_frequency_Luke_lines <- Tokenized_Luke_lines %>% 
-  count(lemmatized_text, sort = TRUE)
+  count(lemmatized_text, sort = TRUE);
 
-top_10_words_Luke_lines <- word_frequency_Luke_lines %>% head(10)
-top_10_words_Luke_lines <- top_10_words_Luke_lines %>% rename(Frequency = n)
+top_10_words_Luke_lines <- word_frequency_Luke_lines %>% head(10);
+top_10_words_Luke_lines <- top_10_words_Luke_lines %>% rename(Frequency = n);
 ```
 
 #### VADER
 
 ``` r
-Tokenized_Vader_lines <- Vader_lines %>%
-  mutate(text = as.character(character.dialogue)) %>%
+Tokenized_Vader_lines <- Vader_lines %>% 
+  mutate(text = as.character(character.dialogue)) %>% 
   unnest_tokens(word, text) %>% 
   anti_join(get_stopwords()) %>% 
   filter(!str_detect(word, "\\d+")) %>% 
-  filter(!word %in% character_names)
+  filter(!word %in% character_names);
 ```
 
     ## Joining with `by = join_by(word)`
 
 ``` r
-Tokenized_Vader_lines <- Tokenized_Vader_lines %>% mutate(lemmatized_text = lemmatize_words(word))
-Tokenized_Vader_lines <- drop(Tokenized_Vader_lines['lemmatized_text'])
+Tokenized_Vader_lines <- Tokenized_Vader_lines %>% mutate(lemmatized_text = lemmatize_words(word));
+Tokenized_Vader_lines <- drop(Tokenized_Vader_lines['lemmatized_text']);
 
 word_frequency_Vader_lines <- Tokenized_Vader_lines %>% 
-  count(lemmatized_text, sort = TRUE)
+  count(lemmatized_text, sort = TRUE);
 
-top_10_words_Vader_lines <- word_frequency_Vader_lines %>% head(10)
-top_10_words_Vader_lines <- top_10_words_Vader_lines %>% rename(Frequency = n)
+top_10_words_Vader_lines <- word_frequency_Vader_lines %>% head(10);
+top_10_words_Vader_lines <- top_10_words_Vader_lines %>% rename(Frequency = n);
 ```
 
 #### THREEPIO
 
 ``` r
-Tokenized_Threepio_lines <- Threepio_lines %>%
-  mutate(text = as.character(character.dialogue)) %>%
+Tokenized_Threepio_lines <- Threepio_lines %>% 
+  mutate(text = as.character(character.dialogue)) %>% 
   unnest_tokens(word, text) %>% 
   anti_join(get_stopwords()) %>% 
   filter(!str_detect(word, "\\d+")) %>% 
-  filter(!word %in% character_names)
+  filter(!word %in% character_names);
 ```
 
     ## Joining with `by = join_by(word)`
 
 ``` r
-Tokenized_Threepio_lines <- Tokenized_Threepio_lines %>% mutate(lemmatized_text = lemmatize_words(word))
-Tokenized_Threepio_lines <- drop(Tokenized_Threepio_lines['lemmatized_text'])
+Tokenized_Threepio_lines <- Tokenized_Threepio_lines %>% mutate(lemmatized_text = lemmatize_words(word));
+Tokenized_Threepio_lines <- drop(Tokenized_Threepio_lines['lemmatized_text']);
 
 word_frequency_Threepio_lines <- Tokenized_Threepio_lines %>% 
-  count(lemmatized_text, sort = TRUE)
+  count(lemmatized_text, sort = TRUE);
 
-top_10_words_Threepio_lines <- word_frequency_Threepio_lines %>% head(10)
-top_10_words_Threepio_lines <- top_10_words_Threepio_lines %>% rename(Frequency = n)
+top_10_words_Threepio_lines <- word_frequency_Threepio_lines %>% head(10);
+top_10_words_Threepio_lines <- top_10_words_Threepio_lines %>% rename(Frequency = n);
 ```
 
 #### Most Frequent Words By Character
@@ -329,7 +329,11 @@ top_10_words_Threepio_lines <- top_10_words_Threepio_lines %>% rename(Frequency 
   xlab("word") +
   ylab("Frequency") +
   theme_minimal() +
-  scale_fill_gradient(low = "lightblue", high = "darkblue")
+  scale_fill_gradient(low = "lightblue", high = "darkblue");
+
+wordcloud(words = word_frequency_Luke_lines$lemmatized_text, freq = word_frequency_Luke_lines$n, min.freq = 3,
+          random.order = FALSE, colors = c('steelblue', 'darkblue', 'navy', 'midnightblue'));
+
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -348,7 +352,7 @@ ggplot(top_10_words_Vader_lines, aes(lemmatized_text, Frequency, fill = Frequenc
   xlab("word") +
   ylab("Frequency") +
   theme_minimal() +
-  scale_fill_gradient(low = "red", high = "darkred")
+  scale_fill_gradient(low = "red", high = "darkred");
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
@@ -367,7 +371,7 @@ wordcloud(words = word_frequency_Vader_lines$lemmatized_text, freq = word_freque
   xlab("word") +
   ylab("Frequency") +
   theme_minimal() +
-  scale_fill_gradient(low = "lightyellow", high = "yellow")
+  scale_fill_gradient(low = "lightyellow", high = "yellow");
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
@@ -382,15 +386,15 @@ wordcloud(words = word_frequency_Threepio_lines$lemmatized_text, freq = word_fre
 ``` r
 VADER_Sentiment_count <- Tokenized_Vader_lines %>% 
   inner_join(get_sentiments(), c("lemmatized_text" = "word")) %>% 
-  count(sentiment)
+  count(sentiment);
 
 LUKE_Sentiment_count <- Tokenized_Luke_lines %>% 
   inner_join(get_sentiments(), c("lemmatized_text" = "word")) %>% 
-  count(sentiment)
+  count(sentiment);
 
 THREEPIO_Sentiment_count <- Tokenized_Threepio_lines %>% 
   inner_join(get_sentiments(), c("lemmatized_text" = "word")) %>% 
-  count(sentiment)
+  count(sentiment);
 ```
 
 #### Sentiment Count By Character
@@ -403,9 +407,9 @@ LUKE_Sentiment_count_plot <- ggplot(LUKE_Sentiment_count, aes(sentiment, n, fill
   xlab("Sentiments") +
   ylab("Counts") +
   theme_minimal() +
-  scale_fill_manual(values = c("skyblue", 'blue'))
+  scale_fill_manual(values = c("skyblue", 'blue'));
 
-print(LUKE_Sentiment_count_plot)
+print(LUKE_Sentiment_count_plot);
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
@@ -418,9 +422,9 @@ VADER_Sentiment_count_plot <- ggplot(VADER_Sentiment_count, aes(sentiment, n, fi
   xlab("Sentiments") +
   ylab("Counts") +
   theme_minimal() +
-  scale_fill_manual(values = c("red", 'darkred'))
+  scale_fill_manual(values = c("red", 'darkred'));
 
-print(VADER_Sentiment_count_plot)
+print(VADER_Sentiment_count_plot);
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
@@ -433,9 +437,9 @@ THREEPIO_Sentiment_count_plot <- ggplot(THREEPIO_Sentiment_count, aes(sentiment,
   xlab("Sentiments") +
   ylab("Counts") +
   theme_minimal() +
-  scale_fill_manual(values = c("yellow", 'lightyellow'))
+  scale_fill_manual(values = c("yellow", 'lightyellow'));
 
-print(THREEPIO_Sentiment_count_plot)
+print(THREEPIO_Sentiment_count_plot);
 ```
 
 ![](Star_Wars_Text_Analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
