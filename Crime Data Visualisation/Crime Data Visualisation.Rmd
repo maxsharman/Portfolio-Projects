@@ -1,0 +1,780 @@
+---
+title: "Crime Data Visualisation"
+author: "Max Sharman"
+date: "2024-03-22"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+# Loading Libraries
+library(mapview)
+library(ggplot2)
+library(tidyverse)
+library(ggcorrplot)
+library(dplyr)
+library(plotly)
+library(leaflet)
+
+# Defining Colour Palette
+colour_palette <- c("#4F758B", "#821B04", "#FFC78C", "#AB274F", "#755C49", "#5C4033", '#EF979C', '#CD4895', '#A396B1', '#A8A883', '#AAF1E6', '#5184C8', '#244C49', '#F53646')
+
+```
+
+## Introduction
+
+The quality of life for those living in Colchester is affected by Crime and Disorder [1]. The purpose of this report is to present data and uncover insights that may not be immediately apparent, and to offer data-driven guidance in reducing crime rates in Colchester in order to enhance the quality of life for its residents. The report makes use of advanced graphics and interactive plots to analyse the policing dataset 'crime23.csv', which is available from data.police.uk. The 'crime23.csv' dataset can be accessed by referring to [2].
+
+The 'crime23' dataset, a comprehensive record of crimes in Colchester during 2023, forms the backbone of this report. It includes crucial details such as crime type, location, date in the Y-m format, and outcome status. The report begins with a broad analysis of this dataset, identifying intriguing patterns, before delving deeper into these for a more thorough examination.
+
+A second dataset, temp2023.csv, from a weather station near Colchester, has been provided. The dataset contains daily climate data such as temperature, wind speed, pressure, and visibility. During the report, the climate data has been used to uncover relationships between the crime data and weather climate data. The 'temp2023.csv' dataset can be accessed by referring to [3].
+
+```{r}
+# Reading Datasets into R studio
+crime23 <- read.csv('crime23.csv')
+temp2023 <- read.csv('temp2023.csv')
+```
+
+## Crime Frequency Analysis
+
+To begin this report, a general analysis of crime frequency is performed using multiple data visualization techniques, such as tables, bar charts, a geographical map, a time series plot, and a seasonal boxplot. The purpose of this section is to comprehend the distribution of crime frequency data and identify areas of interest for further analysis.
+
+The two-way table displays data on various types of crime that occurred in Colchester during 2023. This crime data includes shoplifting, anti-social behaviour, public order, and others. The data is presented in rows and columns to make it easier to understand. The table shows that there were 14 different categories of crime, with violent crime being the most frequent, having a frequency of 2633 cases. The second most frequent crime was anti-social behaviour, with 677 cases. The least frequent crime was possession of weapons, with only 74 cases. 
+
+```{r}
+attach(crime23)
+# Two-Way-Table
+ttable <- table(category, date) 
+two_way_table <- sort(table(category), decreasing = TRUE) # Sorting the data
+# Kable to create a better view of the table
+knitr::kable(two_way_table, caption = 'Colchester Crime Frequency in 2023', col.names = c('Crime', 'Frequency'))
+```
+
+The bar chart presents the top 10 locations where crimes occurred most frequently. The x-axis represents the total number of offences committed, while the y-axis represents the categories of street names. The location 'On or near' had the highest number of total offences with 495 cases. However, this doesn't provide the actual location of each crime. Therefore, data cleaning is required to fix this issue and assign each incomplete 'On or near' location to its actual location.
+
+```{r}
+# Sorting data for the top 10 crime category occurrences 
+frequency_by_street <- crime23 %>%
+  group_by(street_name) %>%
+  summarise(total_offences = n()) %>%
+  arrange(desc(total_offences)) %>%
+  slice(1:10) 
+
+# Bar Chart
+Offences_by_street <- ggplot(data = frequency_by_street, aes(x = street_name, y = total_offences)) +
+  geom_bar(stat = "identity", color = 'black', fill = "#5184C8") +
+  labs(title = "Top 10 Frequency of Offenses by Street Name",
+       x = "Street Name",
+       y = "Total Offenses") +
+  coord_flip() # Flipping bar chart for street name visibility
+# Using ggplotly for interactive bar chart
+
+ggsave("offences_by_street.png", plot = Offences_by_street, width = 8, height = 5, dpi = 300)
+
+knitr::include_graphics("~/Assignment and Data MA304/offences_by_street.png")
+
+```
+
+
+This is a time series plot represented by a line graph, which shows the frequency of crimes committed per month. The blue line indicates the trend of crimes per month, showing whether the number of crimes goes up or down. The graph displays two notable peaks in January, with 651 reported crimes, and in September, with 642 crimes. However, there is a significant decrease from January to February, with only 467 reported cases in February.
+
+```{r}
+# Creating a dataframe with the number of crimes per month
+CrimeCounts <- table(crime23$date)
+CrimeOffenceCounts <- as.data.frame(CrimeCounts)
+names(CrimeOffenceCounts) <- c("Month", "CrimeCounts") # Renaming columns
+
+# Creating time-series plot
+Crime_per_month <- ggplot(CrimeOffenceCounts, aes(x = Month, y = CrimeCounts)) +
+  geom_point(color = "#5184C8", size = 3) +  # Adding Points to graph
+  geom_line(aes(group = 1), color = "#5184C8", size = 1) + # Adding trend line
+  labs(title = "Number of Reported Offences per Month in 2023", # Titles
+       x = "Month",
+       y = "Number of Offences") 
+# Using ggplotly for interactive time-series plot
+
+ggsave("Crime_per_month.png", plot = Crime_per_month, width = 8, height = 5, dpi = 300)
+
+knitr::include_graphics("~/Assignment and Data MA304/Crime_per_month.png")
+
+```
+
+This boxplot illustrates the number of crimes reported during each of the four seasons - Spring, Summer, Autumn, and Winter. Each season is represented by a different coloured box. The median line of Autumn and Winter appears to be at a similar level, indicating that crimes were most frequent during these seasons. Meanwhile, Summer and Spring have lower median bars, suggesting that the crime rate was comparatively lower during these seasons. Autumn, Spring, and Winter have similar quartile spreads, indicating higher variability, whereas spring has a smaller quartile spread.
+
+```{r}
+# Creating new dataframes for each season by filtering the data by month
+crime23_spring <- crime23 %>% filter(date %in% c('2023-03', '2023-04', '2023-05'))
+crime23_summer <- crime23 %>% filter(date %in% c('2023-06', '2023-07', '2023-08'))
+crime23_autumn <- crime23 %>% filter(date %in% c('2023-09', '2023-10', '2023-11'))
+crime23_winter <- crime23 %>% filter(date %in% c('2023-12', '2023-01', '2023-02'))
+
+# Combining dataframes with the added Season attribute
+combine_seasons <- rbind(mutate(crime23_spring, Season = "Spring"),
+                         mutate(crime23_summer, Season = "Summer"),
+                         mutate(crime23_autumn, Season = "Autumn"),
+                         mutate(crime23_winter, Season = "Winter"))
+
+# Calculating the Crime frequency per season
+season_crime_freq <- combine_seasons %>% group_by(Season, category) %>% 
+  summarize(count = n()) 
+
+# Creating the boxplot
+Seasonal_boxplot <- ggplot(season_crime_freq, aes(x = Season, y = count, fill = Season)) +
+  geom_boxplot() 
+  labs(x = 'Seasons', y = 'Offence rate', title = 'Crime rates among different seasons') # Titles
+# Displaying boxplot
+  Seasonal_boxplot + scale_fill_manual(values = colour_palette) # Adding colour pallete
+
+```
+
+
+This map displays the locations of crimes in Autumn and indicates their frequency based on the density of each point. Darker and more dense points suggest that more crimes occurred in that area. The map shows that the centre of Colchester where more shops are located had more crimes as the circles in that area are darker and more dense. However, this map only provides a general overview of crime frequency and does not indicate the actual number of crimes committed in each area.
+
+```{r}
+# Creating the map for crime locations in Autumn
+map <- crime23_autumn %>%
+  group_by(street_name, category, lat, long)
+
+m <- leaflet(map) %>% 
+  addTiles() %>% setView(0.901681, 51.88924, zoom = 13.5) %>% 
+  addCircleMarkers(popup = ~category, radius = 6, color = '#5184C8')
+
+mapshot(m, file = "crime_map_autumn.png")
+
+knitr::include_graphics("crime_map_autumn.png")
+
+```
+
+
+
+## Street/Area Name Analysis
+
+In the previous section, I analysed the frequency graph of the street names in the 'crime23.csv' dataset and found that the data needed to be processed. This section will focus on resolving this problem and conducting a more detailed analysis of the 'street_name' attribute in the dataset.
+
+Here, I handle the incomplete 'On or near' street_names. A table is presented displaying the street ids with missing locations and the number of missing street names they each have. This information is needed for matching the street id with its corresponding street/area name to fix the missing street/area names.
+
+```{r}
+# Filtering data for 'On or near' street names
+on_or_near <- crime23[crime23$street_name == "On or near ", ]
+OnOrNearTable <- table(on_or_near$street_id) # Creating table
+OnOrNearTable <- as.data.frame(OnOrNearTable) # Converting to a data frame
+# Using Kable for a clear table
+knitr::kable(OnOrNearTable, caption = 'Street Ids with Missing Locations', col.names = c('Street_Id', 'Freq'))
+```
+
+I have displayed another table to identify the locations of the missing 'On or near' locations.
+
+```{r}
+# Finding unique street IDs
+unique_streets <- crime23 %>%
+  group_by(street_name) %>%
+  summarize(street_id = unique(street_id))
+
+# Filtering out street names containing only "On or near"
+filtered_streets <- unique_streets[unique_streets$street_name != "On or near ", ]
+# Displaying street IDs to locate missing locations
+filtered_streets 
+
+```
+
+
+I created a 'street_names' vector to replace the incomplete 'On or near' location names, in order to identify their accurate locations. Then, I used the ifelse statement to update the street names based on the corresponding 'street_names' vector. Based on the tables that were created earlier, I was able to match all incomplete street names with their corresponding names by using their unique street IDs. However, there was one incomplete name that I could not identify, which I have labeled as "unknown" and left unresolved. The name is represented by the value "2153040".
+
+After that, I recreated the same bar plot from earlier that shows the fixed data. According to the bar plot, the most frequent crime location was 'On or near Shopping Area', with 480 crimes committed, followed by 'On or near Supermarket', with 376 crimes committed. From looking at the bar plot, I have successfully cleaned the data as the 'On or near' label has been removed. As crimes committed in shopping areas are the most frequent, I will be further investigating these areas.
+
+```{r}
+# Creating a new vector to correctly adjust the street names
+street_names <- c(
+  "2152922" = "On or near Shopping Area",
+  "2152938" = "On or near Parking Area",
+  "2152957" = "On or near Further/higher Educational Building",
+  "2152961" = "On or near Parking Area",
+  "2152969" = "On or near Police Station",
+  "2152976" = "On or near Parking Area",
+  "2152989" = "On or near Parking Area",
+  "2153007" = "On or near Nightclub",
+  "2153018" = "On or near Nightclub",
+  "2153025" = "On or near Shopping Area",
+  "2153040" = "Unknown",
+  "2153051" = "On or near Supermarket",
+  "2153068" = "On or near Parking Area",
+  "2153081" = "On or near Parking Area",
+  "2153105" = "On or near Conference/exhibition Centre",
+  "2153111" = "On or near Nightclub",
+  "2153123" = "On or near Shopping Area",
+  "2153143" = "On or near Petrol Station",
+  "2153155" = "On or near Parking Area",
+  "2153173" = "On or near Shopping Area",
+  "2153190" = "On or near Petrol Station",
+  "2153232" = "On or near Supermarket",
+  "2153245" = "On or near Bus/coach Station",
+  "2153280" = "On or near Supermarket",
+  "2153297" = "On or near Supermarket",
+  "2153318" = "On or near Parking Area",
+  "2153373" = "On or near Supermarket",
+  "2153395" = "On or near Shopping Area",
+  "2153436" = "On or near Supermarket",
+  "2153520" = "On or near Supermarket",
+  "2153615" = "On or near Sports/recreation Area",
+  "2153667" = "On or near Supermarket"
+)
+
+# Using an ifelse statement to adjust the street_name attribute
+crime23 <- crime23 %>%
+  mutate(street_name = ifelse(street_id %in% names(street_names), street_names[as.character(street_id)], street_name))
+
+# Filtering the fixed data to find the crime category frequency
+frequency_by_street <- crime23 %>%
+  group_by(street_name) %>%
+  summarise(total_offences = n()) %>%
+  arrange(desc(total_offences)) %>%
+  slice(1:10) # Sorting for top 10
+
+# Creating the new bar chart
+Offences_by_street <- ggplot(data = frequency_by_street, aes(x = street_name, y = total_offences)) +
+  geom_bar(stat = "identity", color = 'black', fill = "#5184C8") +
+  labs(title = "Top 10 Frequency of Offences by Street Name",
+       x = "Street Name",
+       y = "Total Offenses") +
+  coord_flip() # Flipping bar chart for readable street names
+
+ggsave("offences_by_street_fixed.png", plot = Offences_by_street, width = 8, height = 5, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("offences_by_street_fixed.png")
+
+```
+## Shopping Area Analysis
+
+I have conducted additional analysis on street/area names and found that crimes occur most frequently in shopping areas. As a result, I have decided to further investigate these shopping areas. I have generated a bar plot that displays the most frequently occurring crimes in shopping areas. From the plot, it is evident that shoplifting is the most common crime with 211 offences, followed by violent crimes with 78 occurrences.
+
+```{r}
+# Filtering the data for crimes located on or near shopping areas
+ShoppingArea <- crime23 %>% filter(street_name %in% c('On or near Shopping Area'))
+
+# Grouping by crime category and counting the frequency for each one
+ShoppingAreaCount <- ShoppingArea %>% 
+ group_by(category) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) # Sorting in decending order
+
+# Generating the bar plot
+Offences_by_ShoppingArea <- ggplot(ShoppingAreaCount, aes(x = category, y =count)) + 
+  geom_bar(stat = "identity", color = 'black', fill = "#AAF1E6") +
+  labs(title = "Frequency of Offences by ShoppingArea",
+       x = "Street Name",
+       y = "Total Offenses") +
+  coord_flip() # Flipping the graph so that the crime categories are readable
+
+ggsave("offences_by_shopping_area.png", plot = Offences_by_ShoppingArea, width = 8, height = 5, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("offences_by_shopping_area.png")
+```
+
+
+This pie chart shows the percentage distribution of crimes that occur in shopping areas. Each category of crime is represented by a different colour, and the size of each slice in the chart corresponds to the percentage distribution of the specific category. The largest slice, coloured in cyan, represents shoplifting, which accounts for 44% of all crimes committed in shopping areas. This is significantly higher than the other categories. The second-largest slice, which accounts for 16.3% of the total, represents violent crime. This is an interesting finding because violent crime was found to be the most frequent crime overall, but it is not the most common type of crime in shopping areas. Plotly documentation used for code can be accessed by referring to [4]. 
+
+
+```{r}
+# Grouping Shopping areas by crime category and counting their occurrences
+ShoppingAreaPie <- ShoppingArea  %>% 
+ group_by(category) %>% 
+  summarize(count = n())
+
+# Calculating the sum of all crimes 
+TotalCount <- sum(ShoppingAreaPie$count)
+
+# Calculating the percentage distribution for each crime 
+ShoppingAreaPie <- ShoppingAreaPie %>% mutate(Percentage = round((count / TotalCount) * 100, digits = 2))
+
+pie_chart <- ggplot(ShoppingAreaPie, aes(x = "", y = Percentage, fill = category)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  scale_fill_manual(values = colour_palette) +
+  labs(title = "Percentage Distribution of Crime In Shopping Areas",
+       fill = "Category") +
+  theme_void() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold")) +
+  geom_text(aes(label = paste0(Percentage, "%")), 
+            position = position_stack(vjust = 0.5),
+            size = 3.5)
+
+ggsave("crime_pie_chart.png", plot = pie_chart, width = 8, height = 6, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("crime_pie_chart.png")
+
+```
+
+This time series plot displays the monthly shoplifting offences within shopping areas. The red line represents the trend of the data, while the interactive data points indicate the total number of shoplifting offences for each month. There was a significant decline in shoplifting cases from January to February. After that, there was a gradual decrease in the number of shoplifting offences from March to July. However, there was a significant increase from July to August, with a peak of 26 total offences in August. From August to December, there was another gradual decrease, and the lowest number of shoplifting offences (10) was recorded in December.
+
+```{r}
+# Filtering ShoppingArea to only include shoplifting crimes
+ShoppingAreaShoplifting <- ShoppingArea %>% filter(category == 'shoplifting')
+# Creating a dataframe containing the respective crime occurrences for each month
+ShoppingAreaShopliftingCounts <- table(ShoppingArea$date) 
+ShoppingAreaShopliftingCounts <- as.data.frame(ShoppingAreaShopliftingCounts) 
+names(ShoppingAreaShopliftingCounts) <- c("Month", "ShopliftingCounts") # Naming columns
+
+# Generating the line plot for Shopping Area shoplifting counts
+ShoppingAreaShopliftingMonthly <- ggplot(ShoppingAreaShopliftingCounts, aes(x = Month, y = ShopliftingCounts)) +
+  geom_point(color = "#F53646", size = 3) +  
+  geom_line(aes(group = 1), color = "#F53646", size = 1) + 
+  labs(title = "Number of Reported Shoplifting Offences per Month in Shopping Areas during 2023",
+       x = "Month",
+       y = "Number of Offences") +
+  theme_minimal()
+
+ggsave("shoplifting_monthly.png", plot = ShoppingAreaShopliftingMonthly, width = 10, height = 5, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("shoplifting_monthly.png")
+
+```
+
+I have decided to narrow down the scope of my analysis so that I can examine the data more thoroughly and extract more significant information. To achieve this, I divided the ShoppingArea data into separate areas by identifying unique street IDs to distinguish each shopping area. As a result, I was able to identify five distinct shopping areas for analysis.
+
+```{r}
+# Creating a dataframe to display each unique Shopping Area Street ID
+UniqueShoppingAreas <- as.data.frame(unique(ShoppingArea$street_id))
+UniqueShoppingAreas
+```
+Here, I am processing the data into separate dataframes for each of the shopping.
+
+```{r}
+# Filtering data for the first shopping area
+ShoppingArea1 <- ShoppingArea %>% filter(street_id == c('2153173'))
+ShoppingArea1 <- ShoppingArea1 %>% 
+  mutate(street_id = "ShoppingArea1") # Renaming the street_id to make analysis clear
+
+ShoppingArea1Count <- ShoppingArea1 %>% 
+  group_by(category, street_id) %>% # Grouping by category and street_id
+  summarise(crime_count = n()) # Finding Crime frequency 
+
+# Filtering data for the second shopping area
+ShoppingArea2 <- ShoppingArea %>% filter(street_id == c('2153025'))
+ShoppingArea2 <- ShoppingArea2 %>%
+  mutate(street_id = "ShoppingArea2")  # Renaming the street_id
+
+ShoppingArea2Count <- ShoppingArea2 %>%
+  group_by(category, street_id) %>%
+  summarise(crime_count = n()) # Calculating Crime frequency 
+
+
+# Filtering data for the third shopping area
+ShoppingArea3 <- ShoppingArea %>% filter(street_id == c('2153395'))  
+ShoppingArea3 <- ShoppingArea3 %>%
+  mutate(street_id = "ShoppingArea3") # Renaming the street_id
+
+ShoppingArea3Count <- ShoppingArea3 %>%
+  group_by(category, street_id) %>%
+  summarise(crime_count = n()) # Calculating Crime frequency 
+
+
+# Filtering data for the fourth shopping area
+ShoppingArea4 <- ShoppingArea %>% filter(street_id == c('2153123'))
+ShoppingArea4 <- ShoppingArea4 %>%
+  mutate(street_id = "ShoppingArea4") # Renaming the street_id
+
+ShoppingArea4Count <- ShoppingArea4 %>%
+  group_by(category, street_id) %>%
+  summarise(crime_count = n()) # Calculating Crime frequency 
+
+
+# Filtering data for the fifth shopping area
+ShoppingArea5 <- ShoppingArea %>% filter(street_id == c('2152922'))  
+ShoppingArea5 <- ShoppingArea5 %>%
+  mutate(street_id = "ShoppingArea5") # Renaming the street_id
+
+ShoppingArea5Count <- ShoppingArea5 %>%
+  group_by(category, street_id) %>%
+  summarise(crime_count = n()) # Calculating Crime frequency 
+
+
+# Combining All shopping area data frames including their new street IDs
+AllShoppingAreas <- rbind(ShoppingArea1Count,ShoppingArea2Count,ShoppingArea3Count,ShoppingArea4Count,ShoppingArea5Count)
+```
+
+I have analysed the data and created a stacked bar chart to show the distribution of crimes in five different shopping areas. The chart indicates that ShoppingArea4 had the highest number of crimes, with 105 shoplifting incidents and 43 violent crimes occurring in 2023. This is a significant difference compared to the other shopping areas. ShoppingArea1 had the second-highest number of crimes, with only 64 shoplifting incidents and 13 violent crimes. The difference between ShoppingArea4 and all other shopping areas is very clear. ShopliftingArea3 looks to have a very small number of crime compared to the rest of the shopping areas. Plotly documentation used for code can be accessed by referring to [5]. 
+
+```{r}
+# Creating a static stacked bar chart with ggplot2
+stacked_bar <- ggplot(AllShoppingAreas, aes(x = street_id, y = crime_count, fill = category)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  scale_fill_manual(values = colour_palette) +
+  labs(title = "Distribution of Crime Categories Across Shopping Areas",
+       x = "Shopping Area",
+       y = "Crime Count",
+       fill = "Category") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+        axis.text.x = element_text(angle = 0, hjust = 0.5))
+
+ggsave("stacked_bar_shopping_areas.png", plot = stacked_bar, width = 10, height = 6, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("stacked_bar_shopping_areas.png")
+```
+
+However, the bar chart does not allow us to see the graphical location of each shopping area. Therefore, I will introduce a map displaying the graphical location of each area.
+
+The map displays two shopping areas, ShoppingArea4 and ShoppingArea2, situated in the center of Colchester. This is not unexpected since the map displayed in the previous section demonstrated that the centre of Colchester has the highest crime rate. ShoppingArea3 can be observed to be situated outside of the city center within a small shopping area that comprises Halfords and Pets at Home. The marker for this area is less dense, indicating a lower number of crimes. On the other hand, ShoppingArea1 is located in a much larger retail park with numerous shops and restaurants, as seen on the map, and has a more dense marker. This suggests that larger shopping areas tend to experience more crime.
+
+```{r}
+# Merging data
+AllShoppingAreas <- rbind(ShoppingArea1,ShoppingArea2,ShoppingArea3,ShoppingArea4,ShoppingArea5)
+
+# Grouping data
+map <- AllShoppingAreas %>%
+  group_by(street_name, category)
+
+# Plotting Map for each shopping area
+m <- leaflet(map) %>%
+  addTiles() %>% setView(0.901681, 51.89524, zoom = 14) %>% 
+  addCircleMarkers(popup = ~street_id, radius = 7, color = '#F53646')
+
+mapshot(m, file = "shopping_areas_map.png")
+
+# Display the saved image
+knitr::include_graphics("shopping_areas_map.png")
+
+```
+
+I have created a plot that compares the average temperature in Colchester with that of ShoppingArea4. I chose to use ShoppingArea4 because it had the highest frequency of crime occurrences among all the shopping areas I analysed. I have also introduced loess smoothing in this plot making it easier to understand any trends in the data.
+
+In order to merge the data from temp2023 with the ShoppingArea4 dataset, some data manipulation was required. Initially, the date attribute in temp2023 was in a daily format, while the date attribute in ShoppingArea4 was in a Year-Month (Y-M) format. To make them compatible, I reformatted the date attribute in temp2023 to match the Y-M format. However, this was insufficient to merge the data accurately since the TemperatureCAvg attribute in temp2023 was still based on the daily format. To resolve this issue, I grouped the entire temp2023 dataset by the new monthly data format and calculated the mean average temperature for each month. This ensured that the TemperatureCAvg attribute was in the same format as the crime_count attribute from the ShoppingArea4 dataset, making it possible to merge the data accurately.
+
+The red line in the graph represents the average temperature. The data points that are closer to this line show a consistent trend. On the other hand, the blue data points representing the crime count in ShoppingArea4 are further away from the line, indicating an inconsistent trend. If we compare both lines, we can see a clear correlation between temperature and crime counts after September 2023, as both values show a similar dip. However, the trends at the beginning of the year are not as similar, with a gradual increase in crimes and a faster increase in temperature.
+
+
+```{r}
+# Reformatting the 'Date' attribute for the temp2023 dataset to monthly
+AvgTempPerMonth <- temp2023 %>%
+  group_by(date = format(as.Date(temp2023$Date, '%Y-%m-%d'), "%Y-%m")) %>%  
+  summarise(avg_temp = mean(TemperatureCAvg)) # Calculating the average temperature for each month
+
+# Grouping the ShoppingArea4 data by month
+ShoppingAreaMonthly <- ShoppingArea4 %>%
+  group_by(date) %>%
+  summarise(crime_count = n())
+
+# Merging data frames by date
+TempShoppingArea4 <- merge(AvgTempPerMonth, ShoppingAreaMonthly, by = "date")
+
+# Creating the time-series plot to compare temperature with crime trends
+CrimeAvgTempPerMonth <- ggplot(TempShoppingArea4, aes(x = date)) +
+  geom_smooth(aes(y = avg_temp, colour = 'Average Temperature', group = 1), method = "loess") + # Using smoothing
+  geom_point(aes(y = avg_temp, colour = 'Average Temperature')) +  # Plotting data points          
+    geom_smooth(aes(y = crime_count, colour = 'Crime Count', group = 1), method = "loess") + # Using smoothing   
+  geom_point(aes(y = crime_count, colour = 'Crime Count')) + # Plotting data points
+    labs(title = "ShoppingArea4 With Average Temperature Per Month", # Adding titles
+       x = "Month",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Adjusting the angle for the dates to enhance readibility
+ 
+CrimeAvgTempPerMonth
+
+```
+
+I have generated another plot to compare with the previous one. This plot displays the average temperature along with all shopping area crimes. It is evident that there is a gradual increase in both temperature and shoplifting cases during the first six months, and they both follow a similar trend. However, after August, both the temperature and crimes decrease, but the temperature decrease is more gradual than the sudden dip in crimes. Overall, the ShoppingArea4 plot had similar trends between temperature and crime at the end of the year with a sudden fall in both cases. Whereas, the plot with all shopping areas had similar trends at the beginning of the year. 
+
+```{r}
+# Counting crime occurrences for all shopping areas together
+ShoppingAreaMonthly <- ShoppingArea %>%
+  group_by(date) %>%
+  summarise(crime_count = n())
+
+# Merging temperature data with all shopping area data
+TempAllShoppingAreas <- merge(AvgTempPerMonth, ShoppingAreaMonthly, by = "date")
+
+# Creating the time-series plot to compare all shopping area crime occurrences with the average temperature
+CrimeAvgTempPerMonth <- ggplot(TempAllShoppingAreas, aes(x = date)) +
+  geom_smooth(aes(y = avg_temp, colour = 'Average Temperature', group = 1), method = "loess") + # Adding smoothing
+  geom_point(aes(y = avg_temp, colour = 'Average Temperature')) + # Adding data points for average temperature        
+    geom_smooth(aes(y = crime_count, colour = 'Crime Count', group = 1), method = "loess") +  # Adding smoothing
+  geom_point(aes(y = crime_count, colour = 'Crime Count')) + # Adding data points for crime counts   
+    labs(title = "All Shopping Areas With Average Temperature Per Month", # Adding titles
+       x = "Month",
+       y = "Value") +
+  theme_minimal()  +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Adjust the date angles for better readability
+# Displaying graph 
+CrimeAvgTempPerMonth
+
+```
+
+
+
+## Shopping Area Shoplifting Crime Outcome Analysis
+
+In this section, my objective is to analyse the "crime_status" attribute of the "crime23" dataset. Upon inspecting the dataset, I noticed that the "outcome_status" attribute had 677 missing values. To address this issue, I decided to replace these missing values with "No Outcome Status". This allowed me to visualize the number of incomplete rows in the "outcome_status" attribute.
+
+```{r}
+# Counting NAs for outcome status
+OutcomeStatusNA <- sum(is.na(crime23$outcome_status)) 
+OutcomeStatusNA
+
+# Replacing NAs with 'No Outcome Status'
+crime23 <- replace_na(crime23, list(outcome_status = 'No Outcome Status'))
+```
+
+The dot plot displayed below illustrates the distribution of outcomes for all crimes. As per the graph, the highest percentage of 53.1% shows that investigations were concluded without identifying any suspects. In 17.7% of the cases, investigators were unable to prosecute the suspect. Meanwhile, 9.38% of crime outcomes were left incomplete in the dataset.
+
+```{r}
+# Counting each outcome_status frequency for shopping areas
+CrimeOutcome <- ShoppingArea %>% 
+ group_by(outcome_status) %>% 
+  summarize(count = n())
+
+# Calculating the sum to calculate the percentage distribution for the dot plot
+TotalCount <- sum(CrimeOutcome$count)
+
+# Calculating the percentage distribution
+OutcomeDistribution <- CrimeOutcome %>% mutate(Percentage = round((count / TotalCount) * 100, digits = 2))
+
+# Creating the dot plot
+Dotplot <- ggplot(OutcomeDistribution, aes(x = outcome_status, y = Percentage)) +
+  geom_point(shape = 4, size = 3, colour = '#F53646') +
+  labs(title = "Percentage Distribution of Crime Outcomes", x = "Outcome Status", y = "Percentage") +
+  coord_flip()
+
+ggsave("dotplot_outcomes.png", plot = Dotplot, width = 8, height = 5, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("dotplot_outcomes.png")
+
+
+```
+
+
+
+The scatter plot below illustrates the relationship between Shoplifting Counts in Shopping Areas and Complete Investigations with no suspects per month. Although there is no linear relationship between these two variables, there is a stronger relationship between the outcome status and shoplifting counts closer to the middle of the plot. The plot shows that as the number of shoplifting offences increases, the number of investigations also increases. Suggesting that there might be a connection between the frequency of shoplifting and complete investigations with no suspect identified. 
+
+```{r}
+# Calculating the number of shoplifting offences for all shopping areas
+ShopliftingCrimeCount <- ShoppingArea %>%
+  filter(category == 'shoplifting') %>% 
+  group_by(date) %>% 
+  summarize(count = n())
+
+# Calculating the number of 'Investigation complete; no suspect identified' outcomes by date
+CompleteInvestigationCount <- ShoppingArea %>%
+  filter(outcome_status == 'Investigation complete; no suspect identified') %>% 
+  group_by(date) %>% 
+  summarize(count = n())
+
+# Creating the scatter plot
+ShopliftingCrimeScatter <- ggplot() +
+  geom_point(data = ShopliftingCrimeCount, aes(x = count, y = CompleteInvestigationCount$count), size = 5, shape = 1, colour = '#F53646') +
+  labs(x = "Number of Shoplifting Offences", y = "Number of complete investigations", title = 'Shoplifting Counts Against Their
+Complete Investigations with No Suspect Identified Per Month')
+
+ggsave("scatter_shoplifting_investigations.png", plot = ShopliftingCrimeScatter, width = 8, height = 6, dpi = 300)
+
+# Display the saved image
+knitr::include_graphics("scatter_shoplifting_investigations.png")
+
+
+```
+
+
+Here, I have introduced a density plot for the number of complete investigations per shopping area. However, ShoppingArea3 only includes 1 observation after the data filtering, therefore, a density graph is not possible for this location and will be dropped from this analysis. 
+ShoppingArea5 is right skewed therefore, the mean is greater than the median. ShoppingArea1 has a wider frequency of outcomes where no suspects were identified within the range of 0-8 the density curve is pronounced here then dips at 12. The other shopping areas appear to be more spread-out on occurrences where no suspect was identified. 
+
+```{r}
+# Filtering each shopping area by the 'Investigation complete; no suspect identified' outcome_status
+# and also counting the number of occurrences for this outcome. 
+ShoppingArea1CompleteInvestigations <- ShoppingArea1 %>% filter(outcome_status == 'Investigation complete; no suspect identified') %>% 
+  group_by(date, street_id) %>% 
+  summarise(count = n());
+
+ShoppingArea2CompleteInvestigations <- ShoppingArea2 %>% filter(outcome_status == 'Investigation complete; no suspect identified') %>% 
+  group_by(date, street_id) %>% 
+  summarise(count = n());
+
+ShoppingArea4CompleteInvestigations <- ShoppingArea4 %>% filter(outcome_status == 'Investigation complete; no suspect identified') %>% 
+  group_by(date, street_id) %>% 
+  summarise(count = n());
+
+ShoppingArea5CompleteInvestigations <- ShoppingArea5 %>% filter(outcome_status == 'Investigation complete; no suspect identified') %>% 
+  group_by(date,street_id) %>% 
+  summarise(count = n());
+
+# Binding each data frame together for the density plot
+ShoppingAreaCountsAll <- rbind(ShoppingArea1CompleteInvestigations, ShoppingArea2CompleteInvestigations, ShoppingArea4CompleteInvestigations, ShoppingArea5CompleteInvestigations)
+
+# Creating the density plot
+DensityOutcomeShoppingArea <- ggplot(ShoppingAreaCountsAll, aes(x = count, fill = street_id)) +
+  geom_density(alpha = 0.6) + # Setting alpha value for a clear density plot
+  labs(title = "Density Plot of Complete Investigations With No Suspect Identified 
+By Shopping Area",
+       x = "No Suspect Counts",
+       y = "Density",
+       fill = "Season") +
+   scale_fill_manual(values = c('#F53646', '#4F758B', '#AAF1E6', '#821B04', '#FFC78C')) # Adding the colour palette 
+DensityOutcomeShoppingArea
+```
+
+
+The following histogram displays the number of investigations that were completed in 2023, but where no suspect was identified. The x-axis represents the months of the year, and the y-axis represents the number of such investigations. Upon observing the graph, we can see that the months of May and August had the highest number of investigations with no identified suspects. However, the graph shows fluctuations throughout the year, with no clear trends.
+
+```{r}
+# Creating histogram plot
+ShoppingArea_per_month <- ggplot(ShoppingArea4CompleteInvestigations, aes(x = date, y = count)) +
+   geom_bar(stat = "identity", color = 'black', fill = "#F53646") + 
+  labs(title = "ShoppingArea4 Crimes Where No Suspect was Identified Per Month",
+       x = "Month",
+       y = "Number of Offences") 
+
+# Displaying plot
+ShoppingArea_per_month
+
+```
+
+The Violin plot below shows the number of crimes committed in different shopping areas where no suspect was identified per month. The y-axis represents the number of crimes, while the x-axis displays the shopping areas. Shopping areas 1 and 4 have narrower violins, which indicate lower density, while shopping areas 2 and 5 have wider violins. Shopping areas 1 and 4 have a wider range of cases throughout the year, while shopping areas 2 and 5 have a shorter range, indicating fewer cases.
+
+```{r}
+# Creating violin plot
+ggplot(ShoppingAreaCountsAll, aes(x = factor(street_id), y = count)) +
+  geom_violin(fill = '#F53646' , alpha = 0.6) + 
+  labs(title = "All ShoppingArea Crimes Where No Suspect was Identified Per Month",
+       y = "Count",
+       x = "Shopping Area") + 
+  stat_summary(fun.y = median, geom='point') # Adding stat summary so median is visible 
+```
+
+
+## Shopping Area Correlation analysis
+
+I conducted a correlation analysis using all shopping areas to examine the relationship between weather conditions and shoplifting incidents. The resulting Correlation Matrix displays the correlations between shoplifting offences and weather conditions. I specifically focused on shoplifting incidents in April, May, June, and July, as from the earlier time series plot I found a gradual decrease in crime frequency during this time of the year. The main aim of this correlation analysis was to determine whether temperature had an impact on the frequency of shoplifting offences during this particular time of year.
+
+Each square in the matrix illustrates the correlation between shoplifting and various weather conditions. The coefficient value closer to 1 indicates an increase in shoplifting incidents with that particular weather condition, while a coefficient closer to -1 suggests a decrease in shoplifting incidents with that particular weather condition. A coefficient value of 0 indicates no correlation between shoplifting and the weather. 
+
+In this correlation matrix, darker red boxes suggest a strong positive correlation, while darker blue boxes indicate a strong negative correlation.
+
+According to the correlation matrix, there is a strong negative correlation between shoplifting and temperature, which implies that shoplifting cases decrease as temperature increases. On the other hand, there is a positive correlation between shoplifting and average humidity, wind gust, and wind speed, suggesting that shoplifting increases with these weather attributes. Other weather factors such as precipitation and pressure have no significant relationship with shoplifting frequency. Overall, the correlation matrix suggests that colder temperatures, higher humidity, and wind speed are associated with more shoplifting cases during the analysed time frame.
+
+```{r}
+# Filtering shopping areas for shoplifting offences
+Shoplifting <- ShoppingArea %>% filter(category == 'shoplifting')
+
+# Filtering by date and counting the number of shoplifting offences 
+Shoplifting <- Shoplifting %>% filter(date == c('2023-04', '2023-05', '2023-06', '2023-07')) %>% 
+  group_by(date) %>% 
+  summarise(ShopliftingCount = n())
+
+# Reformatting the weather date attribute to year-month
+temp_new <- temp2023
+temp_new$Date <- format(as.Date(temp2023$Date, '%Y-%m-%d'), "%Y-%m")
+
+# Filtering by date and calculating the average for the weather data
+temp_new_monthly <- temp_new %>% filter(Date == c('2023-04', '2023-05', '2023-06', '2023-07')) %>% 
+  group_by(Date) %>%
+  summarise(across(where(is.numeric), mean))
+
+# Merging the filtered weather data with the filtered shoplifting data frame
+merged_ShoppingArea <- merge(Shoplifting, temp_new_monthly, by.x = "date", by.y = "Date")
+
+# Creating a vector containing the names of all numeric attributes for the correlation matrix
+numerical_cols <- c('ShopliftingCount', 'TemperatureCAvg', 'TemperatureCMax', 'TemperatureCMin', 
+                    'TdAvgC', 'HrAvg', 'WindkmhInt', 'WindkmhGust', 'PresslevHp', 
+                    'Precmm', 'TotClOct', 'SunD1h', 'VisKm')
+ 
+# Computing the correlation between variables
+correlation_matrix <- cor(merged_ShoppingArea[, numerical_cols])
+
+# Creating the correlation matrix for All shopping areas
+ggcorrplot(correlation_matrix, type = "lower", 
+           title = "Correlation Matrix of Shoplifting Frequency 
+in Shopping Areas With Weather Data",
+           colors = c("#5184C8", "white", "#F53646")) + 
+          theme(plot.title = element_text(size=10)) # Adjusting title size
+
+```
+
+
+I have generated another correlation matrix that compares the weather to shoplifting cases, but this time only for the ShoppingArea4 location.
+In this correltaion matrix, the orange squares are positive correlations while blue squares represent negative correlations. The correlation matrix indicates some weak positive relationships within temperature attributes. This implies that shoplifting tends to increase as the temperature increases. This finding is interesting as it contradicts the previous correlation matrix that considered all the shopping centres, which showed that the shoplifting cases decreased as the temperature increased. Therefore, it would be worth analysing the correlation of another shopping centre located outside the centre of Colchester to see if the results differ.
+
+```{r}
+# Filtering shopping areas for ShoppingArea4 offences
+Shoplifting <- ShoppingArea4 %>% filter(category == 'shoplifting')
+
+# Filtering by date and counting the number of shoplifting offences 
+Shoplifting <- Shoplifting %>% filter(date == c('2023-04', '2023-05', '2023-06', '2023-07')) %>% 
+  group_by(date) %>% 
+  summarise(ShopliftingCount = n())
+
+# Merging the filtered weather data with the filtered shoplifting data frame
+merged_ShoppingArea4 <- merge(Shoplifting, temp_new_monthly, by.x = "date", by.y = "Date")
+
+ # Computing the correlation between variables
+correlation_matrix <- cor(merged_ShoppingArea4[, numerical_cols])
+
+# Creating the correlation matrix for ShoppingArea4
+ggcorrplot(correlation_matrix, type = "lower", 
+           title = "Correlation Matrix of Shoplifting Frequency 
+in ShoppingArea4 With Weather Data",
+           colors = c("#5184C8", "white", "#FFC78C")) + 
+          theme(plot.title = element_text(size=10))
+
+```
+
+
+
+This is the correlation matrix for a shopping area situated outside the centre of Colchester (ShoppingArea1). In this correltaion matrix, the purple squares are postive correlations while blue squares represent negative correlations. It is evident from the matrix that this shopping area is similar to the first correlation matrix, which contains data on all shopping areas. The matrix also shows that the shopping counts have a negative correlation with the temperature attributes. Indicating that as temperature increases, shoplifting decreases for ShoppingArea1. 
+
+```{r}
+# Filtering shopping areas for ShoppingArea1 offences
+Shoplifting <- ShoppingArea1 %>% filter(category == 'shoplifting')
+
+# Filtering by date and counting the number of shoplifting offences
+Shoplifting <- Shoplifting %>% filter(date == c('2023-04', '2023-05', '2023-06', '2023-07')) %>% 
+  group_by(date) %>% 
+  summarise(ShopliftingCount = n())
+
+# Merging the filtered weather data with the filtered shoplifting data frame
+merged_ShoppingArea1 <- merge(Shoplifting, temp_new_monthly, by.x = "date", by.y = "Date")
+
+ # Computing the correlation between variables
+correlation_matrix <- cor(merged_ShoppingArea1[, numerical_cols])
+
+# Creating the correlation matrix for ShoppingArea1
+ggcorrplot(correlation_matrix, type = "lower", 
+           title = "Correlation Matrix of Shoplifting Frequency 
+in ShoppingArea1 With Weather Data",
+           colors = c("#5184C8", "white", "#AB274F")) + 
+          theme(plot.title = element_text(size=10))
+```
+
+
+
+
+## Conclusion
+
+The analysis of the policing dataset using various data visualization techniques has provided valuable insights into crime patterns in Colchester, with a specific focus on shopping areas. The findings reveal that shopping areas have the highest crime rates, with shoplifting being the most prevalent type of crime in these areas. It has been determined that Shopping Area 4, situated in the centre of Colchester, has the highest crime rate among all shopping centers. Upon examining a map, I noticed a pattern that smaller shopping areas tend to have lower crime rates compared to larger ones.
+
+Furthermore, the average temperature also follows the general shoplifting trends throughout 2023. It was found that 53.1% of crimes within shopping areas resulted in no suspect being identified, which was at its highest in August. The correlation analysis also identified how all shopping and singled-out shopping areas correlate with the weather conditions. The results revealed that ShoppingArea4 shows that as the temperature increases, so does shoplifting, while for ShoppingArea1, shoplifting decreases while the temperature increases. The insights obtained from this analysis aim to help improve policing in Colchester and reduce crime in the shopping areas of Colchester. 
+
+## References:
+
+1. Association LG. Crime and disorder in Colchester, 2023 Q3 (12 months ending) [Internet]. lginform.local.gov.uk. [cited 2024 Apr 24]. Available from: https://lginform.local.gov.uk/reports/view/lga-research/lga-research-report-police-recorded-crime?mod-area=E07000071&mod-group=AllDistrictInRegion_East&mod-type=namedComparisonGroup
+
+
+
+2. About | data.police.uk [Internet]. Police.uk. 2016. Available from: https://data.police.uk/about/#location-anonymisation
+
+
+3. Scrapping meteorological (Synop) data from the Ogimet webpage — meteo_ogimet [Internet]. bczernecki.github.io. Available from: https://bczernecki.github.io/climate/reference/meteo_ogimet.html
+
+4. plotlygraphs. Pie Charts [Internet]. Plotly.com. plotlygraphs; 2015. Available from: https://plotly.com/r/pie-charts/
+
+5. Bar [Internet]. plotly.com. Available from: https://plotly.com/r/bar-charts/
+
+
+
