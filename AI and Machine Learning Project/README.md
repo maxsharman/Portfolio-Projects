@@ -1,4 +1,4 @@
-# The Impact of Twitter Sentiments on Srock Market Trends with AI and Machine Learning
+# The Impact of Twitter Sentiments on Stock Market Trends with AI and Machine Learning
 
 This was my final project for my AI and Machine Learning course. I collected tweets from a dataset, extracted 
 sentiment data, and analysed the results against stock market trends to explore potential relationships between 
