@@ -5,3 +5,8 @@ sentiment data, and analysed the results against stock market trends to explore 
 public sentiment and stock performance.
 
 * Language: Python
+* Packages: pandas, tensorflow, matplotlib, numpy, keras, cleantext, vaderSentiment
+
+
+
+
