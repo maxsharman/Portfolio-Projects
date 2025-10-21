@@ -5,4 +5,4 @@ and JOIN queries to analyse the dataset. I also built a Tableau dashboard to vis
 a short time series analysis in Python to identify trends over time.
 
 * Language: Python, SQL
-* Visualization tool: Tableau
+* Visualisation tool: Tableau
