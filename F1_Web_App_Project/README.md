@@ -11,4 +11,4 @@ Live App Link: https://portfolio-projects-bdchdecwhwhfrkanaiffhc.streamlit.app/
 * Language: Python
 * Framework: Streamlit
 * Data Source: FastF1
-* Libraries: Pandas, Matplotlib / Plotly
+* Libraries: Pandas, Matplotlib, Numpy, Plotly
