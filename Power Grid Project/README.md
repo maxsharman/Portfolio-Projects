@@ -7,3 +7,4 @@ interesting given Chile’s exposure to natural disasters, which made identifyin
 
 * Language: Python
 * Packages: pandas, scipy, seaborn, sys, networkx, matplotlib, numpy, mpl_toolkits, statistics
+* Datasets: 'WithTap_edge.csv', 'WithTap_node.csv'
