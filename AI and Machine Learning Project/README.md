@@ -6,6 +6,7 @@ public sentiment and stock performance.
 
 * Language: Python
 * Packages: pandas, tensorflow, matplotlib, numpy, keras, cleantext, vaderSentiment
+* Datasets: stock_tweets.csv, 
 
 
 
