@@ -1,4 +1,4 @@
-# Formula 1 Silverstone Gran Prix 2025 Dashboard Web App
+# Formula 1 Silverstone Grand Prix 2025 Dashboard Web App
 
 This project is a web application built with Python and Streamlit that visualises up-to-date Formula 1 data from 
 the 2025 Silverstone Grand Prix.
