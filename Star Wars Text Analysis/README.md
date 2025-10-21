@@ -5,3 +5,5 @@ explored the script of Star Wars Episode: IV, identifying the most frequent word
 visualisations to highlight these insights.
 
 * Language: RStudio
+* Libraries: stringr, tidytext, knitr, tidyverse
+* Data: 'SW_EpisodeIV.txt'
