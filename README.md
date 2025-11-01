@@ -8,4 +8,4 @@ My portfolio includes examples of data & research projects.
 
 # Featured Project
 
-Formula 1 Silverstone 2025 Visualiser: https://portfolio-projects-bdchdecwhwhfrkanaiffhc.streamlit.app/
+Formula 1 Silverstone 2025 Visualiser: https://f1webappproject-xu2tdadqhamuvrs9bqisvv.streamlit.app/
