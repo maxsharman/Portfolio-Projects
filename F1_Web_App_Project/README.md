@@ -6,7 +6,7 @@ the 2025 Silverstone Grand Prix.
 Using the FastF1 library, the app fetches and processes live F1 data to create insightful and interactive visualisations 
 this would be perfect for fans who want to explore race performance, lap times, and telemetry in detail.
 
-Live App Link: https://portfolio-projects-bdchdecwhwhfrkanaiffhc.streamlit.app/
+Live App Link: https://f1webappproject-xu2tdadqhamuvrs9bqisvv.streamlit.app/
 
 * Language: Python
 * Framework: Streamlit
