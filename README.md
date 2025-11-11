@@ -10,6 +10,6 @@ My portfolio includes examples of data & research projects.
 
 * Formula 1 Silverstone 2025 Visualiser: https://f1webappproject-xu2tdadqhamuvrs9bqisvv.streamlit.app/
   
-* Labour Markets Final Project (Hybrid Machine Learning Models): [View My Final MSc Project]https://github.com/maxsharman/Portfolio-Projects/blob/main/Labour%20Markets%20Project/Max_Final_Dissertation.pdf
+* Labour Markets Final Project (Hybrid Machine Learning Models): [View My Final MSc Project](https://github.com/maxsharman/Portfolio-Projects/blob/main/Labour%20Markets%20Project/Max_Final_Dissertation.pdf)
 
-* Crime Data Visualisation Project: [View My Crime Data Visualisation]https://maxsharman.github.io/Portfolio-Projects/Crime%20Data%20Visualisation%20Project/Crime-Data-Visualisation.html
+* Crime Data Visualisation Project: [View My Crime Data Visualisation](https://maxsharman.github.io/Portfolio-Projects/Crime%20Data%20Visualisation%20Project/Crime-Data-Visualisation.html)
