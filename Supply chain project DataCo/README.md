@@ -1,4 +1,4 @@
-**Supply Chain Analysis — DataCo Project**
+# Supply Chain Analysis — DataCo Project
 
 This project explores and addresses a business problem using data analysis and machine learning techniques.
 
