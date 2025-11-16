@@ -2,7 +2,7 @@
 
 This project explores and addresses a business problem using data analysis and machine learning techniques.
 
-**Project link:**  [View the live project](https://maxsharman.github.io/Portfolio-Projects/Supply%20chain%20project%20DataCo/supply_chain_project_DataCo.html)
+**Project link:**  [View the live project](https://maxsharman.github.io/Portfolio-Projects/Supply%20chain%20project%20DataCo/supply-chain-project-DataCo.html)
 
 I tasked myself with answering a key business question:
 *“We are experiencing issues within our supply chain, can you help us identify the problems and suggest areas for improvement?”*
