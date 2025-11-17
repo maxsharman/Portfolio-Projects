@@ -1,4 +1,4 @@
-# An Analysis of Improving Unemployment Rate Forecasting with Machine Learning
+# Machine Learning Approaches to Labour Market Forecasting
 
 This was my final project for my Master’s degree. I analysed labour market data from the 
 Office for National Statistics (ONS) and combined econometric models with machine learning techniques to build 
