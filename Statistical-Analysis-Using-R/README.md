@@ -1,0 +1,10 @@
+# Statistics Project
+
+This is a statistics project I completed in RStudio focusing on species richness. I applied a range of 
+statistical techniques, including correlation analysis, boxplots, contingency tables, hypothesis testing, and 
+linear regression. Additionally, I conducted an open analysis to examine species richness across different land 
+classifications, such as rounded mountains and upper valleys.
+
+* Language: RStudio
+* Packages: Desctools, dplyr, tidyr, moments, reshape2, ggplot2
+* Dataset: "proportional_species_richness_NAs_removed.csv"
