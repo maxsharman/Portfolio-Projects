@@ -7,7 +7,7 @@ Using the FastF1 library, the app fetches and processes live F1 data to create i
 
 this would be perfect for fans who want to explore race performance, lap times, and telemetry in detail.
 
-Live App Link: [View My F1 Web App](https://f1webappproject-xu2tdadqhamuvrs9bqisvv.streamlit.app/)
+Live App Link: [View My F1 Web App](https://maxformula1webapp-6m2vkf9tped34kbyl7b8yl.streamlit.app/)
 
 * Language: Python
 * Framework: Streamlit
